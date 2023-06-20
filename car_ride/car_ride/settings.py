@@ -99,7 +99,7 @@ WSGI_APPLICATION = 'car_ride.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'rideshare', 
+        'NAME': 'ride_db', 
         'USER': 'postgres', 
         'PASSWORD': 'root',
         'HOST': '127.0.0.1', 

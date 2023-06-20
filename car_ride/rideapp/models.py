@@ -40,7 +40,7 @@ class Driver(models.Model):
 	phone = models.CharField(max_length=100)
 	license_no = models.CharField(max_length=100)
 	car_year = models.IntegerField()
-	car_model = models.IntegerField()
+	car_model = models.CharField()
 	car_name = models.CharField(max_length=100)
 	car_no = models.CharField(max_length=100)
 	create_date = models.DateTimeField(default=timezone.now)
