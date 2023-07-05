@@ -8,14 +8,24 @@ from .models import Driver
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from django.http import HttpResponse
 from rest_framework.permissions import AllowAny
-from .serializers import UserSerializer, RegisterSerializer, DriverSerializer
+from .serializers import UserSerializer, RegisterSerializer, DriverSerializer, DriverLocationUpdateSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from django.contrib.auth import login
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from knox.views import LoginView as KnoxLoginView
+import requests
+import phonenumbers
+from phonenumbers import geocoder, carrier
+from opencage.geocoder import OpenCageGeocode
+import folium
 
+from plyer import gps
+
+api_key = '93efe7db09584d8d842ccbdcaa4aca00'
+api_url = 'https://ipgeolocation.abstractapi.com/v1/?api_key=' + api_key
 
 
 class CustomAuthToken(ObtainAuthToken):
@@ -145,3 +155,63 @@ class DriverAPI(APIView):
 
         driver_instance.delete()
         return Response({"res": "Driver Deleted!"}, status=status.HTTP_200_OK)
+
+class RiderMapAPI(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = DriverLocationUpdateSerializer
+
+    def get_ip_location_details(self, request):
+        ip = self.get_my_ip(request)
+        response = requests.get(api_url + "&ip_address=" + ip)
+        return response.content
+
+    def get_my_ip(self, request):
+        x_forwaded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwaded_for:
+            ip = x_forwaded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+
+        # ip_address = "208.98.222.69"
+        ip = "184.144.61.211"
+        return ip
+        
+
+    def get(self, request, *args, **kwargs):
+        # return Response({"res": "Rider Map!"}, status=status.HTTP_200_OK)
+        ip_detail = self.get_ip_location_details(request)
+
+
+        # ph_no = "+12265036509"
+        ph_no = "+918281756866"
+        ph_no = phonenumbers.parse(ph_no)
+        your_loc = geocoder.description_for_number(ph_no, "en")
+        print(your_loc);
+        service_provider = carrier.name_for_number(ph_no, "en")
+        print(carrier.name_for_number(ph_no, "en"));
+        key = "38372d4eb0584cb6b90bbf1ee231d2f4"
+        geo = OpenCageGeocode(key);
+        query = str(your_loc)
+        result = geo.geocode(query)
+        # print(result)
+        lat = result[0]['geometry']['lat']
+        lng = result[0]['geometry']['lng']
+        print(lat)
+        print(lng)
+        return HttpResponse(ip_detail)
+
+
+    def options(self, request, *args, **kwargs):
+        print(request.data)
+        data = {
+            'driver_update_id': request.data.get('driver_id'),
+            'driver_id': request.data.get('f_name'),
+            'longitude': request.data.get('l_name'),
+            'latitude': request.data.get('age')
+        }
+        serializer = DriverLocationUpdateSerializer(data = data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

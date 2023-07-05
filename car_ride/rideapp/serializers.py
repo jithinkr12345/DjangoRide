@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from .models import Driver
+from .models import Driver, DriverLastLocUpdate
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import status
@@ -44,3 +44,8 @@ class DriverSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Driver
 		fields = ["driver_id","first_name","last_name","age","dob","email","phone","license_no","car_year","car_model","car_name","car_no","create_date","write_date"]
+
+class DriverLocationUpdateSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = DriverLastLocUpdate
+		fields = ["driver_update_id", "driver_id", "longitude", "latitude"]

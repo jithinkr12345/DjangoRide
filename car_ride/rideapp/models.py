@@ -56,6 +56,12 @@ class DriverLocations(models.Model):
 	create_date = models.DateTimeField(default=timezone.now)
 	write_date = models.DateTimeField(auto_now=True)
 
+class DriverLastLocUpdate(models.Model):
+	driver_update_id = models.IntegerField(primary_key=True)
+	driver_id = models.ForeignKey(Driver, on_delete=models.CASCADE)
+	longitude = models.CharField(max_length=100)
+	latitude = models.CharField(max_length=100)
+
 class CarAmenities(models.Model):
 
 	amenities_id = models.IntegerField(primary_key=True)
