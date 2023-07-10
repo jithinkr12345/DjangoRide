@@ -10,7 +10,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from django.http import HttpResponse
 from rest_framework.permissions import AllowAny
-from .serializers import UserSerializer, RegisterSerializer, DriverSerializer, DriverLocationUpdateSerializer
+from .serializers import UserSerializer, RegisterSerializer, DriverSerializer, DriverLocationUpdateSerializer, PaymentSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from django.contrib.auth import login
@@ -23,6 +23,8 @@ from opencage.geocoder import OpenCageGeocode
 import folium
 
 from plyer import gps
+from django.core.mail import send_mail
+from django.conf import settings
 
 api_key = '93efe7db09584d8d842ccbdcaa4aca00'
 api_url = 'https://ipgeolocation.abstractapi.com/v1/?api_key=' + api_key
@@ -202,7 +204,7 @@ class RiderMapAPI(APIView):
         return HttpResponse(ip_detail)
 
 
-    def options(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         print(request.data)
         data = {
             'driver_update_id': request.data.get('driver_id'),
@@ -211,6 +213,44 @@ class RiderMapAPI(APIView):
             'latitude': request.data.get('age')
         }
         serializer = DriverLocationUpdateSerializer(data = data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EmailAPI(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+
+        send_mail(subject='Payment Info for Ride 001234', message='Ride form Kitchener to London have been successfully completed', from_email=settings.EMAIL_HOST_USER, recipient_list=["krjithin520@gmail.com"])
+        return Response({"res": "Mail Send Successfully"}, status=status.HTTP_200_OK)
+
+class PaymentAPI(APIView):
+    permission_classes = (AllowAny,)
+    serializer_class = PaymentSerializer
+
+    def post(self, request, *args, **kwargs):
+        print(request.data)
+        data = {
+            'payment_id': request.data.get('payment_id'),
+            'invoice_id': request.data.get('invoice_id'),
+            'transaction_id': request.data.get('transaction_id'),
+            'mode_of_pay': request.data.get('mode_of_pay'),
+            'price': request.data.get('price'),
+            # 'email': request.data.get('email'),
+            # 'phone': request.data.get('phone'),
+            # 'license_no': request.data.get('license_no'),
+            # 'car_year': request.data.get('car_year'),
+            # 'car_model': request.data.get('car_model'),
+            # 'car_name': request.data.get('car_name'),
+            # 'car_no': request.data.get('car_no'),
+            'create_date': request.data.get('create_date'),
+            'write_date': request.data.get('write_date'),
+        }
+        serializer = PaymentSerializer(data = data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
