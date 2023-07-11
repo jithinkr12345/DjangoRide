@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import authentication, permissions
 from django.contrib.auth.models import User
-from .models import Driver
+from .models import Driver, DriverLastLocUpdate
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -207,12 +207,22 @@ class RiderMapAPI(APIView):
     def post(self, request, *args, **kwargs):
         print(request.data)
         data = {
-            'driver_update_id': request.data.get('driver_id'),
-            'driver_id': request.data.get('f_name'),
-            'longitude': request.data.get('l_name'),
-            'latitude': request.data.get('age')
+            'driver_update_id': 1,
+            'driver_id': 1,
+            'longitude': request.data.get('longitude'),
+            'latitude': request.data.get('latitude')
         }
+        # last_update = DriverLastLocUpdate.objects.filter(driver_id=1)
+        last_update = DriverLastLocUpdate.objects.get(driver_update_id=1)
+        if last_update:
+            serializer = DriverLocationUpdateSerializer(instance=last_update, data = data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        print(data)
         serializer = DriverLocationUpdateSerializer(data = data)
+        print(serializer.is_valid)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
