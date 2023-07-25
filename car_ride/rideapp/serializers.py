@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from .models import Driver, DriverLastLocUpdate, Payment
+from .models import Driver, DriverLastLocUpdate, Payment, CustomUser
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,10 +16,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 	email = serializers.EmailField(required=True, validators=[UniqueValidator(queryset=User.objects.all())])
 	password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
 	password2 = serializers.CharField(write_only=True, required=True)
+	user_type = serializers.CharField(write_only=True, required=True)
 
 	class Meta:
 		model = User
-		fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name')
+		fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name', 'user_type')
 		extra_kwargs = {
 	  		'first_name': {'required': True},
 	  		'last_name': {'required': True}
@@ -38,6 +39,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 		)
 		user.set_password(validated_data['password'])
 		user.save()
+		user_type = CustomUser.objects.create(
+			# user_id=user.id,
+			user=user,
+			user_type=validated_data['user_type']
+			)
 		return user
 
 class DriverSerializer(serializers.ModelSerializer):
