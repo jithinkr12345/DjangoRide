@@ -1,16 +1,18 @@
 from django.shortcuts import render
+from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import authentication, permissions
 from django.contrib.auth.models import User
-from .models import Driver, DriverLastLocUpdate
+from .models import Driver, DriverLastLocUpdate, CarRide
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from django.http import HttpResponse
 from rest_framework.permissions import AllowAny
-from .serializers import UserSerializer, RegisterSerializer, DriverSerializer, DriverLocationUpdateSerializer, PaymentSerializer
+from .serializers import UserSerializer, RegisterSerializer, DriverSerializer, DriverLocationUpdateSerializer, \
+    PaymentSerializer, CarRideSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from django.contrib.auth import login
@@ -265,3 +267,50 @@ class PaymentAPI(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CarRideViewSet(APIView):
+    permission_classes = (AllowAny,)
+    def post(self, request, *args, **kwargs):
+        # print(request.data)
+
+        try:
+            last_id = CarRide.objects.all().latest("ride_id").ride_id
+        except:
+            last_id = 0
+
+        print("LAST ID ", last_id)
+
+        data_initial = {
+            "ride_id" : last_id + 1,
+            "to_loc" : request.data.get("to_loc"),
+            "from_loc" : request.data.get("from_loc"),
+            "price" : request.data.get("price"),
+            "pay_type" : request.data.get("pay_type"),
+            "driver_id" : request.data.get("driver_id")
+        }
+
+        print("DATA INITIAL : ", data_initial)
+        serializer = CarRideSerializer(data=data_initial)
+        if serializer.is_valid():
+            print("SERIALIZER ", serializer.is_valid())
+            serializer.save()
+            final_data = serializer.data
+            return Response(final_data, status=status.HTTP_201_CREATED)
+        else:
+            print("SERIALZER INVALID : ", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            id = request.query_params.get("id")
+            print("ID : ", id)
+            ride = CarRide.objects.filter(ride_id=id)[0]
+            print("RIDE : ", ride)
+            if ride:
+                data = CarRideSerializer(ride).data
+                return Response(data, status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)

@@ -151,7 +151,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Email Configuration
-import environ
+# import environ
 
 # env = environ.Env()
 # environ.Env.read_env()
