@@ -8,13 +8,13 @@ from django.contrib.auth.models import User
 import jwt, datetime
 from rest_framework.exceptions import AuthenticationFailed
 
-from .models import Driver, DriverLastLocUpdate
+from .models import Driver, DriverLastLocUpdate, PriceSlab
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from django.http import HttpResponse
 from rest_framework.permissions import AllowAny
-from .serializers import UserSerializer, RegisterSerializer, DriverSerializer, DriverLocationUpdateSerializer, PaymentSerializer
+from .serializers import UserSerializer, RegisterSerializer, DriverSerializer, DriverLocationUpdateSerializer, PaymentSerializer, PaymentCalculateSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from django.contrib.auth import login, logout
@@ -207,8 +207,8 @@ class DriverAPI(APIView):
 		return Response({"res": "Driver Deleted!"}, status=status.HTTP_200_OK)
 
 class RiderMapAPI(APIView):
-	authentication_classes = [authentication.TokenAuthentication]
-	permission_classes = [permissions.IsAuthenticated]
+	# authentication_classes = [authentication.TokenAuthentication]
+	# permission_classes = [permissions.IsAuthenticated]
 	serializer_class = DriverLocationUpdateSerializer
 
 	def get_ip_location_details(self, request):
@@ -248,6 +248,7 @@ class RiderMapAPI(APIView):
 
 
 	def post(self, request, *args, **kwargs):
+		print("--------------post---------------");
 		data = {
 			'driver_update_id': 1,
 			'driver_id': 1,
@@ -304,3 +305,28 @@ class PaymentAPI(APIView):
 			serializer.save()
 			return Response(serializer.data, status=status.HTTP_201_CREATED)
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PaymentCalculateAPI(APIView):
+	serializer_class = PaymentCalculateSerializer
+
+	def post(self, request, *args, **kwargs):
+		print(request.data);
+		data = {
+			'total_km': request.data.get('total_km')
+		}
+		price_slab = PriceSlab.objects.filter(from_km__lte = float(request.data.get('total_km')), to_km__gte = float(request.data.get('total_km'))).first()
+		total_price = 0
+		if price_slab:
+			price = price_slab.price_per_km
+			total_price_cents = float(request.data.get('total_km')) * float(price)
+			total_price = round((total_price_cents / 100),2);
+			print(total_price);
+		serializer = PaymentCalculateSerializer(data = data)
+		response = Response()
+		if request.data.get('total_km'):
+			response.data = {
+				'message': 'success',
+				'total_price': total_price
+			}
+			return response
+		return  {'message': 'error', 'error_message': "Distance can't be fetched"}

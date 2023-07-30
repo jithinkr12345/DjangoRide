@@ -124,3 +124,9 @@ class Payment(models.Model):
 	price = models.DecimalField(max_digits=6, decimal_places=2)
 	create_date = models.DateTimeField(default=timezone.now)
 	write_date = models.DateTimeField(auto_now=True)
+
+class PriceSlab(models.Model):
+	slab_id = models.IntegerField(primary_key=True)
+	from_km = models.FloatField()
+	to_km = models.FloatField()
+	price_per_km = models.DecimalField(max_digits=6, decimal_places=2)
