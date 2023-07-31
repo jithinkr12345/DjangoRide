@@ -30,6 +30,6 @@ urlpatterns = [
     path('api/rider/map', RiderMapAPI.as_view()),
     path('api/rider/email', EmailAPI.as_view()),
     path('api/rider/payment', PaymentAPI.as_view()),
-    path('api/user/price', PaymentCalculateAPI.as_view())
+    path('api/user/price', PaymentCalculateAPI.as_view()),
     path('api/rider/base_price', BasePriceViewSet.as_view())
 ]
