@@ -7,14 +7,13 @@ from rest_framework.authentication import SessionAuthentication
 from django.contrib.auth.models import User
 import jwt, datetime
 from rest_framework.exceptions import AuthenticationFailed
-
-from .models import Driver, DriverLastLocUpdate, PriceSlab
+from .models import Driver, DriverLastLocUpdate, PriceSlab, BasePrice
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from django.http import HttpResponse
 from rest_framework.permissions import AllowAny
-from .serializers import UserSerializer, RegisterSerializer, DriverSerializer, DriverLocationUpdateSerializer, PaymentSerializer, PaymentCalculateSerializer
+from .serializers import UserSerializer, RegisterSerializer, DriverSerializer, DriverLocationUpdateSerializer, PaymentSerializer, PaymentCalculateSerializer, BasePriceSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from django.contrib.auth import login, logout
@@ -306,6 +305,7 @@ class PaymentAPI(APIView):
 			return Response(serializer.data, status=status.HTTP_201_CREATED)
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class PaymentCalculateAPI(APIView):
 	serializer_class = PaymentCalculateSerializer
 
@@ -330,3 +330,11 @@ class PaymentCalculateAPI(APIView):
 			}
 			return response
 		return  {'message': 'error', 'error_message': "Distance can't be fetched"}
+
+class BasePriceViewSet(APIView):
+	permission_classes = (AllowAny,)
+
+	def get(self, request, *args, **kwargs):
+		objs = BasePrice.objects.all()
+		data = BasePriceSerializer(objs, many=True).data
+		return Response(data, status=status.HTTP_200_OK)

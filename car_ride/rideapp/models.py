@@ -1,4 +1,5 @@
 from django.db import models
+from django.db import models
 import datetime
 from django.utils import timezone
 from django.conf import settings
@@ -130,3 +131,9 @@ class PriceSlab(models.Model):
 	from_km = models.FloatField()
 	to_km = models.FloatField()
 	price_per_km = models.DecimalField(max_digits=6, decimal_places=2)
+
+class BasePrice(models.Model):
+
+	category = models.CharField()
+	base_price = models.DecimalField(max_digits=6, decimal_places=2)
+	image_url = models.CharField(null=True)

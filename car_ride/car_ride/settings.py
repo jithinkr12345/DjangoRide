@@ -102,7 +102,7 @@ WSGI_APPLICATION = 'car_ride.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'ride_share', 
+        'NAME': 'ride_db',
         'USER': 'postgres', 
         'PASSWORD': 'root',
         'HOST': '127.0.0.1', 
@@ -154,7 +154,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Email Configuration
-import environ
+# import environ
 
 # env = environ.Env()
 # environ.Env.read_env()

@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from .models import Driver, DriverLastLocUpdate, Payment, CustomUser, PriceSlab
+from .models import Driver, DriverLastLocUpdate, Payment, CustomUser, PriceSlab,BasePrice
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import status
@@ -61,7 +61,14 @@ class PaymentSerializer(serializers.ModelSerializer):
 		model = Payment
 		fields = ["payment_id","invoice_id","transaction_id","mode_of_pay","price","create_date","write_date"]
 
+
 class PaymentCalculateSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = PriceSlab
 		fields = ["slab_id","from_km","to_km","price_per_km"]
+
+
+class BasePriceSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = BasePrice
+		fields = "__all__"
