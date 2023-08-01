@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from .models import Driver, DriverLastLocUpdate, Payment, CustomUser, PriceSlab,BasePrice
+from .models import Driver, DriverLastLocUpdate, Payment, CustomUser, PriceSlab, BasePrice, CarRide, DriverLastLocUpdate
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import status
@@ -54,7 +54,7 @@ class DriverSerializer(serializers.ModelSerializer):
 class DriverLocationUpdateSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = DriverLastLocUpdate
-		fields = ["driver_update_id", "driver_id", "longitude", "latitude"]
+		fields = "__all__"
 
 class PaymentSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -71,4 +71,14 @@ class PaymentCalculateSerializer(serializers.ModelSerializer):
 class BasePriceSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = BasePrice
+		fields = "__all__"
+
+class RiderRequestSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = CarRide
+		fields = "__all__"
+
+class DriverLocationSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = DriverLastLocUpdate
 		fields = "__all__"

@@ -7,13 +7,13 @@ from rest_framework.authentication import SessionAuthentication
 from django.contrib.auth.models import User
 import jwt, datetime
 from rest_framework.exceptions import AuthenticationFailed
-from .models import Driver, DriverLastLocUpdate, PriceSlab, BasePrice
+from .models import Driver, DriverLastLocUpdate, PriceSlab, BasePrice, CarRide, DriverLastLocUpdate
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from django.http import HttpResponse
 from rest_framework.permissions import AllowAny
-from .serializers import UserSerializer, RegisterSerializer, DriverSerializer, DriverLocationUpdateSerializer, PaymentSerializer, PaymentCalculateSerializer, BasePriceSerializer
+from .serializers import UserSerializer, RegisterSerializer, DriverSerializer, DriverLocationUpdateSerializer, PaymentSerializer, PaymentCalculateSerializer, BasePriceSerializer, RiderRequestSerializer, DriverLocationSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from django.contrib.auth import login, logout
@@ -206,6 +206,7 @@ class DriverAPI(APIView):
 		return Response({"res": "Driver Deleted!"}, status=status.HTTP_200_OK)
 
 class RiderMapAPI(APIView):
+	permission_classes = (AllowAny),
 	# authentication_classes = [authentication.TokenAuthentication]
 	# permission_classes = [permissions.IsAuthenticated]
 	serializer_class = DriverLocationUpdateSerializer
@@ -247,15 +248,18 @@ class RiderMapAPI(APIView):
 
 
 	def post(self, request, *args, **kwargs):
-		print("--------------post---------------");
+		print("--------------ffffffpost---------------");
+		print(request.data);
 		data = {
-			'driver_update_id': 1,
-			'driver_id': 1,
+			# 'driver_update_id': 1,
+			'driver_id': request.data.get('driver_id'),
 			'longitude': request.data.get('longitude'),
 			'latitude': request.data.get('latitude')
 		}
+
 		# last_update = DriverLastLocUpdate.objects.filter(driver_id=1)
-		last_update = DriverLastLocUpdate.objects.get(driver_update_id=1)
+		last_update = DriverLastLocUpdate.objects.filter(driver_id = request.data.get('driver_id')).first();
+		print(last_update);
 		if last_update:
 			serializer = DriverLocationUpdateSerializer(instance=last_update, data = data, partial=True)
 			if serializer.is_valid():
@@ -329,7 +333,7 @@ class PaymentCalculateAPI(APIView):
 				'total_price': total_price
 			}
 			return response
-		return  {'message': 'error', 'error_message': "Distance can't be fetched"}
+		return Response({"Distance can't be fetched"}, status=status.HTTP_400_BAD_REQUEST)
 
 class BasePriceViewSet(APIView):
 	permission_classes = (AllowAny,)
@@ -338,3 +342,91 @@ class BasePriceViewSet(APIView):
 		objs = BasePrice.objects.all()
 		data = BasePriceSerializer(objs, many=True).data
 		return Response(data, status=status.HTTP_200_OK)
+
+class RiderRequestAPI(APIView):
+	permission_classes = (AllowAny),
+	serializer_class = RiderRequestSerializer
+
+	def post(self, request, *args, **kwargs):
+		# print("---------hell0-----------");
+		print(request.data);
+		user = None;
+		if request.data.get('jwt'):
+			payload = jwt.decode(request.data.get('jwt'), 'secret', algorithm=['HS256'])
+			user = User.objects.filter(id=payload['id']).first()
+			print(user);
+			print(user.id);
+			if not user:
+				print("---------hell02222-----------");
+				return Response({"User not found"}, status=status.HTTP_400_BAD_REQUEST)
+			print("---------hell0111-----------");
+		data = {
+			'from_loc': request.data.get('pickup'),
+			'to_loc': request.data.get('dropoff'),
+			'price': request.data.get('amount'),
+			'pay_type': request.data.get('pay_type'),
+			'state': request.data.get('state'),
+			'user_id': user.id,
+		}
+		print(data);
+		serializer = RiderRequestSerializer(data = data)
+		print("-fffffffffffffffffff");
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data, status=status.HTTP_201_CREATED)
+		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+	def put(self, request, *args, **kwargs):
+		print("------------put");
+		print(request.data)
+		rider_id = request.data.get('ride_id', False)
+		rider_obj = CarRide.objects.get(ride_id=rider_id)
+		if not rider_obj:
+			return Response({"res": "Object with rider id does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+		data = {
+			'ride_id': request.data.get('ride_id'),
+			'from_loc': request.data.get('pickup'),
+			'to_loc': request.data.get('dropoff'),
+			'price': request.data.get('amount'),
+			'pay_type': request.data.get('pay_type'),
+			'state': request.data.get('state'),
+			'user_id': request.data.get('username'),
+			'driver_id': request.data.get('driver_id')
+		}
+		serializer = RiderRequestSerializer(instance=rider_obj, data = data, partial=True)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data, status=status.HTTP_200_OK)
+		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+	# def get(self, request, *args, **kwargs):
+	# 	ride_request = CarRide.objects.all()
+	# 	# ride_request = CarRide.objects.filter(state = "draft")
+	# 	serializer = RiderRequestSerializer(ride_request, many=True)
+	# 	return Response(serializer.data, status=status.HTTP_200_OK)
+
+	def get(self, request, id=None, *args, **kwargs):
+		ride_request_id = request.GET.get('id', False)
+		if not ride_request_id:
+			ride_request = CarRide.objects.all();
+		else:
+			ride_request = CarRide.objects.filter(ride_id = ride_request_id)
+		serializer = RiderRequestSerializer(ride_request, many=True)
+		return Response(serializer.data, status=status.HTTP_200_OK)
+
+class DriverLastLocationAPI(APIView):
+	permission_classes = (AllowAny),
+
+
+	def get(self, request, id=None, *args, **kwargs):
+		print("gggggggggggggggggg");
+		driver_loc_id = request.GET.get('id', False)
+		print(driver_loc_id);
+		if not driver_loc_id:
+			driver_loc = DriverLastLocUpdate.objects.all();
+		else:
+			driver_loc = DriverLastLocUpdate.objects.filter(driver_id = driver_loc_id)
+			print(driver_loc);
+		serializer = DriverLocationSerializer(driver_loc, many=True)
+		return Response(serializer.data, status=status.HTTP_200_OK)

@@ -66,7 +66,7 @@ class DriverLocations(models.Model):
 	write_date = models.DateTimeField(auto_now=True)
 
 class DriverLastLocUpdate(models.Model):
-	driver_update_id = models.IntegerField(primary_key=True)
+	driver_update_id = models.AutoField(primary_key=True)
 	driver_id = models.ForeignKey(Driver, on_delete=models.CASCADE)
 	longitude = models.CharField(max_length=100)
 	latitude = models.CharField(max_length=100)
@@ -81,13 +81,14 @@ class CarAmenities(models.Model):
 
 class CarRide(models.Model):
 
-	ride_id = models.IntegerField(primary_key=True)
-	# user_id = models.ForeignKey(AnonymousUser, on_delete=models.CASCADE)
-	driver_id = models.ForeignKey(Driver, on_delete=models.CASCADE)
+	ride_id = models.AutoField(primary_key=True)
+	user_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+	driver_id = models.ForeignKey(Driver, blank=True, null=True, on_delete=models.CASCADE, default=None)
 	from_loc = models.CharField(max_length=100)
 	to_loc = models.CharField(max_length=100)
 	price = models.DecimalField(max_digits=6, decimal_places=2)
 	pay_type = models.CharField(max_length=100)
+	state = models.CharField(max_length=100, default='draft')
 	create_date = models.DateTimeField(default=timezone.now)
 	write_date = models.DateTimeField(auto_now=True)
 

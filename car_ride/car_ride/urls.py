@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from rideapp.views import ListUsers, CustomAuthToken, RegisterUserAPIView, LoginAPI, LogoutAPI, UserView, DriverAPI, RiderMapAPI, EmailAPI, PaymentAPI, PaymentCalculateAPI, BasePriceViewSet
+from rideapp.views import ListUsers, CustomAuthToken, RegisterUserAPIView, LoginAPI, LogoutAPI, UserView, DriverAPI, RiderMapAPI, EmailAPI, PaymentAPI, PaymentCalculateAPI, BasePriceViewSet, RiderRequestAPI, DriverLastLocationAPI
 
 urlpatterns = [
     path('api/token/auth', CustomAuthToken.as_view()),
@@ -31,5 +31,7 @@ urlpatterns = [
     path('api/rider/email', EmailAPI.as_view()),
     path('api/rider/payment', PaymentAPI.as_view()),
     path('api/user/price', PaymentCalculateAPI.as_view()),
-    path('api/rider/base_price', BasePriceViewSet.as_view())
+    path('api/rider/base_price', BasePriceViewSet.as_view()),
+    path('api/rider/request', RiderRequestAPI.as_view()),
+    path('api/driver/location', DriverLastLocationAPI.as_view())
 ]
